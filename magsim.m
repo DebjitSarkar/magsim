@@ -1,30 +1,37 @@
-% FEM MagSim
+%% MAGSIM
 % Debjit Sarkar
+% The purpose of this script is to simulate the electromagnetic forces
+% between point charges as an intermediate step to doing FEM analysis of
+% larger systems
 
-%% CONSTANTS
+% Note: Does not include second-order field effects
+
+%% PHYSICAL CONSTANTS
 epsilon0 = 8.854e-12; % permittivity of free space
-mu0 = 4 * pi * 1e-7; % permeability of free space
-me = 9.109e-31; % mass of electron
-mp = 1.673e-27; % mass of proton
-e = 1.602e-19; % fundamental charge (reminder: make negative for electrons)
+mu0 = 4 * pi * 1e-7;  % permeability of free space
+me = 9.109e-31;       % mass of electron
+mp = 1.673e-27;       % mass of proton
+e = 1.602e-19;        % fundamental charge
+c = 3e8;              % light speed in vacuum
 
 %% SIMULATION PARAMETERS AND VARIABLES
-numPoints = 3; % number of point charges
-tbegin = 0; % simulation start time
-step = 0.001; % time step
-numSteps = 10; % number of time steps
+numPoints = 3;        % number of point charges
+tbegin = 0;           % simulation start time
+step = 0.001;         % time step
+numSteps = 10;        % number of time steps
 tend = tbegin + numSteps * step; % simulation end time
 
 debugLvl = 1; % 0 = off, 1 = time loop, 2 = calc loop
 
 %% POINT CHARGES
-charges = zeros(numPoints, 13); % ID, charge, mass, position, velocity, acceleration, mobile
-%                         Index:  1   2       3     4         7         10
-%                       Example: [1,  1e-10,  1e-9, 0, 0, 0,  5, 0, 0,  9.8, 0, 0,    1]
+charges = zeros(numPoints, 13); 
+%   Field:  ID, charge, mass, position, velocity, acceleration, mobility
+%   Index:  1   2       3     4  5  6   7  8  9   10 11 12      13
+% Example: [1,  1e-10,  1e-9, 0, 0, 0,  5, 0, 0,  0, 0, -9.8,   1]
 % note about mobility: 1 = mobile, 0 = static
 charges(1, :) = [1, -e, me, 0 0 0, 0 0 0, 0 0 0, 1]; % electron
 charges(2, :) = [2, -e, me, 0 1 0, 0 0 0, 0 0 0, 1]; % electron
-charges(3, :) = [3, e, mp, 1 0 0, 0 0 0, 0 0 0, 0]; % proton
+charges(3, :) = [3,  e, mp, 1 0 0, 0 0 0, 0 0 0, 0]; % proton
 
 %% TEST CASES
 % Remember to change the number of points
@@ -46,7 +53,7 @@ hold on;
 for t = tbegin:step:tend
     charges(:, 10:12) = zeros(size(charges, 1), 3);
     if debugLvl >= 1
-        disp("Velocities");
+        disp("Velocities at t = " + t);
         disp(charges(:, 7:9));
     end
     for i = 1:numPoints
