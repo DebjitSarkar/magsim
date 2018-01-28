@@ -15,9 +15,9 @@ step = 0.001; % time step
 numSteps = 10; % number of time steps
 tend = tbegin + numSteps * step; % simulation end time
 
-debugLvl = 0; % 0 = off, 1 = t loop, 2 = calc loop
+debugLvl = 1; % 0 = off, 1 = time loop, 2 = calc loop
 
-%% CHARGES
+%% POINT CHARGES
 charges = zeros(numPoints, 12); % ID, charge, mass, position, velocity, acceleration
 %                         Index:  1   2       3     4         7         10
 %                       Example: [1,  1e-10,  1e-9, 0, 0, 0,  5, 0, 0,  9.8, 0, 0]
@@ -39,20 +39,20 @@ charges(3, :) = [3, e, mp, 1 0 0, 0 0 0, 0 0 0]; % proton
 %charges(2, :) = [2, -e, me, 100 0 0, 0 1e10 0, 0 0 0]; % electron
 %charges(3, :) = [3,  e, mp, 50 0 0,  0 1e10 0, 0 0 0]; % proton
 
-%%
+%% CALCULATIONS
 figure;
 hold on;
 
 for t = tbegin:step:tend
     charges(:, 10:12) = zeros(size(charges, 1), 3);
-    if debug > 0
+    if debugLvl >= 1
         disp("Velocities");
         disp(charges(:, 7:9));
     end
     for i = 1:numPoints
         for j = 1:numPoints
             if(i ~= j)
-                if debug >= 2
+                if debugLvl >= 2
                     disp("t = " + t + "|i = " + i + "|j = " + j);
                 end
                 posDiff = charges(j, 4:6) - charges(i, 4:6);
@@ -79,6 +79,7 @@ for t = tbegin:step:tend
         charges(i, 4:6) = charges(i, 4:6) + step * charges(i, 7:9);
     end
     
+%% PLOTTING
     % plots charges from white = beginning to black = end
     colorSpec = [1 1 1] * (1 - (t - tbegin) / tend);
     plot3(charges(:, 4), charges(:, 5), charges(:, 6), 'o', ...
