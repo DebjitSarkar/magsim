@@ -18,13 +18,13 @@ tend = tbegin + numSteps * step; % simulation end time
 debugLvl = 1; % 0 = off, 1 = time loop, 2 = calc loop
 
 %% POINT CHARGES
-charges = zeros(numPoints, 12); % ID, charge, mass, position, velocity, acceleration
+charges = zeros(numPoints, 13); % ID, charge, mass, position, velocity, acceleration, mobile
 %                         Index:  1   2       3     4         7         10
-%                       Example: [1,  1e-10,  1e-9, 0, 0, 0,  5, 0, 0,  9.8, 0, 0]
-
-charges(1, :) = [1, -e, me, 0 0 0, 0 0 0, 0 0 0]; % electron
-charges(2, :) = [2, -e, me, 0 1 0, 0 0 0, 0 0 0]; % electron
-charges(3, :) = [3, e, mp, 1 0 0, 0 0 0, 0 0 0]; % proton
+%                       Example: [1,  1e-10,  1e-9, 0, 0, 0,  5, 0, 0,  9.8, 0, 0,    1]
+% note about mobility: 1 = mobile, 0 = static
+charges(1, :) = [1, -e, me, 0 0 0, 0 0 0, 0 0 0, 1]; % electron
+charges(2, :) = [2, -e, me, 0 1 0, 0 0 0, 0 0 0, 1]; % electron
+charges(3, :) = [3, e, mp, 1 0 0, 0 0 0, 0 0 0, 0]; % proton
 
 %% TEST CASES
 % Remember to change the number of points
@@ -50,39 +50,43 @@ for t = tbegin:step:tend
         disp(charges(:, 7:9));
     end
     for i = 1:numPoints
-        for j = 1:numPoints
-            if(i ~= j)
-                if debugLvl >= 2
-                    disp("t = " + t + "|i = " + i + "|j = " + j);
-                end
-                posDiff = charges(j, 4:6) - charges(i, 4:6);
-                posNorm = norm(posDiff);
-                %F = q * (E + v x B)
-                %a = (q / m) * (E + v x B)
-                %B = (mu0 / (4 * pi)) * (q / r^3) * cross(v, r)
-                B = (mu0 * charges(j, 2) * ...
-                   cross(charges(j, 7:9), posDiff)) / (4 * pi * posNorm^3);
-                %B = [0 0 0];
-                E = (charges(j, 2) * posDiff) / ...
-                                           (4 * pi * epsilon0 * posNorm^3);
-                %a = (qE + qv x B) / m
-                % TODO: verify that the acceleration is in the right
-                % direction (the negative signs in front of E and
-                % cross(...)
-                charges(i, 10:12) = charges(i, 10:12) + (charges(i, 2) /... 
+        if charges(i, 13) == 1 % Skips calculations for static charges
+            for j = 1:numPoints
+                if(i ~= j)
+                    if debugLvl >= 2
+                        disp("t = " + t + "|i = " + i + "|j = " + j);
+                    end
+                    posDiff = charges(j, 4:6) - charges(i, 4:6);
+                    posNorm = norm(posDiff);
+                    %F = q * (E + v x B)
+                    %a = (q / m) * (E + v x B)
+                    %B = (mu0 / (4 * pi)) * (q / r^3) * cross(v, r)
+                    B = (mu0 * charges(j, 2) * ...
+                        cross(charges(j, 7:9), posDiff)) / (4 * pi * posNorm^3);
+                    %B = [0 0 0];
+                    E = (charges(j, 2) * posDiff) / ...
+                        (4 * pi * epsilon0 * posNorm^3);
+                    %a = (qE + qv x B) / m
+                    % TODO: verify that the acceleration is in the right
+                    % direction (the negative signs in front of E and
+                    % cross(...)
+                    charges(i, 10:12) = charges(i, 10:12) + (charges(i, 2) /...
                         charges(i, 3)) * (-E + -cross(charges(i, 7:9), B));
+                end
             end
         end
     end
     for i = 1:numPoints
-        charges(i, 7:9) = charges(i, 7:9) + step * charges(i, 10:12);
-        charges(i, 4:6) = charges(i, 4:6) + step * charges(i, 7:9);
+        if charges(i, 13) == 1
+            charges(i, 7:9) = charges(i, 7:9) + step * charges(i, 10:12);
+            charges(i, 4:6) = charges(i, 4:6) + step * charges(i, 7:9);
+        end
     end
     
 %% PLOTTING
     % plots charges from white = beginning to black = end
     colorSpec = [1 1 1] * (1 - (t - tbegin) / tend);
     plot3(charges(:, 4), charges(:, 5), charges(:, 6), 'o', ...
-                                'MarkerFaceColor', colorSpec, ...
-                                'MarkerEdgeColor', 'k'); % k = black
+        'MarkerFaceColor', colorSpec, ...
+        'MarkerEdgeColor', 'k'); % k = black
 end
