@@ -1,10 +1,10 @@
 %% MAGSIM
 % Debjit Sarkar
 % The purpose of this script is to simulate the electromagnetic forces
-% between point charges as an intermediate step to doing FEM analysis of
-% larger systems
+% between point charges as an intermediate step to doing FEM/FDTD analysis of
+% larger systems like transistors
 
-% Note: Does not include second-order field effects
+% Note: Does not include second-order field effects yet
 
 %% PHYSICAL CONSTANTS
 epsilon0 = 8.854e-12; % permittivity of free space
